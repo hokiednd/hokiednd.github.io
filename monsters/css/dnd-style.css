@@ -66,13 +66,13 @@ button {
     color: #ffffff;
     font-size: 1rem;
     font-family: Tahoma, Georgia, Arial, sans-serif;
-    background: #91ab8e;
+    background: #2C313F;
     padding: 2px 6px;
     width: auto;
 }
 
 button:hover {
-    background: #a5c791;
+    background: #0C692F;
     text-decoration: none;
 }
 
