@@ -1,3 +1,14 @@
+
+.hpcframe {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  flex-wrap: nowrap;
+  position: absolute;
+}
+
+
 /***************/
 /* MEYER RESET */
 /***************/
@@ -100,15 +111,16 @@ html {
 
 body {
   background: #2C313F;
-  font: 18px/1.4 Helvetica, Arial, sans-serif;
+  font: 1em/1.4 Helvetica, Arial, sans-serif;
   color: #ffffff;
 }
 
 .container {
   margin: 0 auto;
   max-width: 1000px;
-  padding: 0 10px;
+  padding: 0 .625em;
   width: 100%;
+  height: auto;
 }
 
 table, th, td {
@@ -249,24 +261,18 @@ img {
 /*********************/
 .wrapper-masthead {
   margin: auto;
-  position: fixed;
-  display: block;
   background-color: #2C313F;
   width: 100%;
+  height: auto;
+  flex-shrink: 0;
+  padding-bottom: 1.5em;
 }
 
-.bodyfix {
-  padding-top: 119px;
-}
-@media screen and (max-width: 640px) {
-  .bodyfix {
-    padding-top: 165px;
-  }
-}
+.bodyfix {overflow: auto;flex-grow: 1;}
 
 .masthead {
-  padding: 20px 0;
-  border-bottom: 1px solid #ffffff;
+  padding: 1.25em 0;
+  border-bottom: .0625em solid #ffffff;
 }
 @media screen and (max-width: 640px) {
   .masthead {
@@ -276,9 +282,9 @@ img {
 
 .site-avatar {
   float: left;
-  width: 70px;
-  height: 70px;
-  margin-right: 15px;
+  width: 4.375em;
+  height: 4.375em;
+  margin-right: 1em;
 }
 @media screen and (max-width: 640px) {
   .site-avatar {
@@ -293,6 +299,8 @@ img {
 
 .site-info {
   float: left;
+  height: auto;
+  width: auto;
 }
 @media screen and (max-width: 640px) {
   .site-info {
@@ -303,20 +311,25 @@ img {
 }
 
 .site-name {
-  margin: 0;
+  margin: 0 0 0 0;
   color: #ffffff;
   cursor: pointer;
   font-family: 'Shojumaru';
   font-weight: 125;
-  font-size: 36px;
-  letter-spacing: 1.15px;
-  margin: -10px 0 0 0;
+  font-size: 2.25em;
+  letter-spacing: 0.071875em;
+  height: auto;
+  width: auto;
+  line-height: 1;
 }
 
 .site-description {
-  margin: -5px 0 0 0;
+  margin: 1.125em 0 0 0;
   color: #ffffff;
-  font-size: 16px;
+  font-size: 1em;
+  height: auto;
+  width: auto;
+  line-height: 1;
 }
 @media screen and (max-width: 640px) {
   .site-description {
@@ -326,9 +339,11 @@ img {
 
 nav {
   float: right;
-  margin-top: 23px;
+  margin-top: 1.4em;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 18px;
+  font-size: 1.125em;
+  width: auto;
+  height: auto;
 }
 @media screen and (max-width: 640px) {
   nav {
@@ -430,20 +445,20 @@ nav a {
 }
 
 .wrapper-footer {
-  margin-top: 25px;
+  margin-top: 1.5em;
   background-color: #0C692F;
   bottom: 0;
   width: 100%;
+  flex-shrink: 0;
+  height: auto;
 }
 
 footer {
-  padding: 5px 0;
+  padding: .375em 0;
   text-align: center;
-  font-size: 10px;
-}
-
-.postheightfix {
-  min-height: 100vh;
+  font-size: .75em;
+  height: auto;
+  width: 100%;
 }
 
 .highlight {
