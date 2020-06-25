@@ -1,0 +1,386 @@
+var profbonus = this.getField("Prof_Bonus").value;
+
+var actopts = ["Action","Bonus Action","Reaction","Attack","Other","  "];
+
+var restopts = ["SR","LR","Dawn","Other","  "];
+
+var dmgopts = [["Elemental","Cold","Fire","Force","Lightning","Necrotic","Radiant","Thunder"],"Acid","Bludgeoning","Piercing","Poison","Psychic","Slashing","Other","  "];
+
+function swap_val(field,fieldref)
+{
+this.getField(field).value = this.getField(fieldref).value;
+}
+
+function pop_menu(field,list)
+{
+var cRtn = app.popUpMenu.apply(app,list);
+if (cRtn) getField(field).value = cRtn;
+}
+
+function get_prof()
+{
+profbonus = this.getField("Prof_Bonus").value;
+}
+
+function five_minusfive()
+{
+if (event.value > 5) event.value = 5;
+if (event.value < -5) event.value = -5;
+}
+
+function ten_minusten()
+{
+if (event.value > 10) event.value = 10;
+if (event.value < -10) event.value = -10;
+}
+
+function static_mod(field)
+{
+event.value = this.getField(field).value + 10;
+}
+
+
+function arrow_up(field)
+{
+this.getField(field).value = this.getField(field).value + 1;
+}
+
+function arrow_down(field)
+{
+this.getField(field).value = this.getField(field).value - 1;
+}
+
+function add_prof(box,field)
+{
+if (this.getField(box).value === "True") event.value = this.getField(field).value + profbonus;
+else event.value = this.getField(field).value;
+}
+
+function get_choice()
+{
+choice = this.getField("init_half").value + this.getField("init_noact").value;
+}
+
+function get_initdie()
+{
+init_die = this.getField("action_type").value + this.getField("weap_type").value;
+if (choice === 2) init_die = init_die - 1;
+}
+
+function calc_init()
+{
+var choice = this.getField("init_half").value + this.getField("init_noact").value;
+var modifier = this.getField("init_mod").value;
+var init_die = this.getField("action_type").value + this.getField("weap_type").value;
+var checksum = 0;
+var mod_add = "";
+var init_roll = "";
+var dice = "d4";
+
+if (choice === 2) init_die = init_die - 1;
+if (choice === "1Off") checksum = 1;
+if (choice === "Off1") checksum = 1;
+if (this.getField("init_adv").value !== "Off") checksum = 1;
+if (this.getField("init_dadv").value !== "Off") checksum = checksum - 1;
+if (checksum < 0) init_roll = ", d. adv.";
+if (checksum > 0) init_roll = ", adv.";
+
+if (init_die === 2) dice = "d10";
+if (init_die === 3) dice = "d8";
+if (init_die === 4) dice = "d6";
+if (init_die < 2 ) dice = "d12";
+
+if (modifier > 0) mod_add = "+" + modifier;
+if (modifier < 0) mod_add = modifier;
+event.value = dice + mod_add + init_roll;
+}
+
+function F12094936() {
+
+showplus();
+}
+
+function F12094680() {
+
+showplus();
+}
+function C12094680() {
+
+calc_mod("details_dex_modifier");
+}
+
+function F12094488() {
+
+showplus();
+}
+function C12094488() {
+
+calc_mod("details_con_modifier");
+}
+
+function F12095064() {
+
+showplus();
+}
+function C12095064() {
+
+calc_mod("details_int_modifier");
+}
+
+function F12095128() {
+
+showplus();
+}
+function C12095128() {
+
+calc_mod("details_wis_modifier");
+}
+
+function F12094168() {
+
+showplus();
+}
+function C12094168() {
+
+calc_mod("details_cha_modifier");
+}
+
+function F12094232() {
+
+showplus();
+}
+
+function F12095448() {
+
+showplus();
+}
+function C12095448() {
+
+add_prof("Check Box 11","details_str_score");
+}
+
+function F12095576() {
+
+showplus();
+}
+function C12095576() {
+
+add_prof("Check Box 12","details_dex_score");
+}
+
+function F12095192() {
+
+showplus();
+}
+function C12095192() {
+
+add_prof("Check Box 13","details_con_score");
+}
+
+function F12094360() {
+
+showplus();
+}
+function C12094360() {
+
+add_prof("Check Box 14","details_int_score");
+}
+
+function F12094552() {
+
+showplus();
+}
+function C12094552() {
+
+add_prof("Check Box 15","details_wis_score");
+}
+
+function F12095256() {
+
+showplus();
+}
+function C12095256() {
+
+add_prof("Check Box 16","details_cha_score");
+}
+
+function F12092120() {
+
+if (event.value < 1) event.target.textColor = color.red;
+else event.target.textColor = color.black;
+if (event.value < 1) event.value = "Critically\r\nInjured";
+}
+
+function F12092248() {
+
+event.value = event.value + "'";
+}
+
+function C12092568() {
+
+static_mod("details_int_score");
+}
+
+function C12092696() {
+
+static_mod("details_wis_score");
+}
+
+function C12392224() {
+
+calc_init();
+}
+
+function F12393696() {
+
+showplus();
+}
+
+function C12392736() {
+AFSimple_Calculate("SUM", new Array ("LoadBase", "LoadMod", "Prof_Bonus", "details_str_score"));
+}
+
+function C12394144() {
+AFSimple_Calculate("SUM", new Array ("size1", "size10", "size11", "size2", "size3", "size4", "size5", "size6", "size7", "size8", "size9"));
+}
+
+function F12394208() {
+
+showplus();
+}
+
+function F12393760() {
+
+showplus();
+}
+function C12393760() {
+
+var loadDiff = this.getField("LoadMax").value - this.getField("LoadEquip").value;
+
+event.value = Math.floor(loadDiff / 2) * 5;
+
+if (loadDiff <= 0) event.value = loadDiff * 5;
+
+}
+
+function F12395040() {
+showplus();
+}
+
+function F12394912() {
+showplus();
+}
+
+function F12394528() {
+showplus();
+}
+
+function F12394400() {
+showplus();
+}
+
+function F12394592() {
+showplus();
+}
+
+function F12489632() {
+
+if (event.value > 3) event.target.textColor = color.red;
+else event.target.textColor = color.black;
+
+event.value = event.value + " / 3";
+}
+
+function C12487840() {
+
+if (this.getField("politics_num").value > 2) event.value = "Lawful";
+else if (this.getField("politics_num").value < -2) event.value = "Chaotic";
+else event.value = "Neutral";
+}
+
+function C12487328() {
+
+if (this.getField("morals_num").value > 2) event.value = "Good";
+else if (this.getField("morals_num").value < -2) event.value = "Evil";
+else event.value = "Neutral";
+}
+
+function F12487136() {
+
+showplus();
+}
+function C12487136() {
+
+five_minusfive();
+}
+
+function F12486688() {
+
+showplus();
+}
+function C12486688() {
+
+five_minusfive();
+}
+
+function C12486048() {
+
+ten_minusten();
+}
+
+function F12487776() {
+
+if (this.getField("capacity").value < event.value) event.target.textColor = color.red;
+else event.target.textColor = color.black;
+}
+
+function F39684584() {
+showplus();
+}
+
+function U43246096() {
+arrow_up("politics_num");}function U43246240() {
+arrow_down("politics_num");}function U43246312() {
+arrow_up("morals_num");}function U43244656() {
+arrow_down("morals_num");}function U43563048() {
+arrow_up("renown_num");}function U43562256() {
+arrow_down("renown_num");}function U43563336() {
+arrow_up("ammo_left1");}function U43562400() {
+swap_val("ammo_left1","ammo_size1");}function U43562760() {
+arrow_up("ammo_left2");}function U43563480() {
+arrow_down("ammo_left1");}function U43562688() {
+arrow_down("ammo_left2");}function U43563552() {
+swap_val("ammo_left2","ammo_size2");}function D43562832() {
+pop_menu("details_attack1_actiontype",actopts);}function D43563768() {
+pop_menu("details_attack2_actiontype",actopts);}function D43563840() {
+pop_menu("details_attack3_actiontype",actopts);}function D43561608() {
+pop_menu("details_attack4_actiontype",actopts);}function D43561680() {
+pop_menu("details_attack5_actiontype",actopts);}function D43562040() {
+pop_menu("details_attack1_damagetype",dmgopts);}function U43561752() {
+arrow_up("HPCurrent");}function U43561968() {
+arrow_down("HPCurrent");}function U43561824() {
+this.getField("HPTemp").value = 0;}function U43564056() {
+swap_val("HPCurrent","HPMax");}function U43564920() {
+swap_val("LPCurrent","LPMax");}function U43563984() {
+arrow_up("LPCurrent");}function U43564272() {
+arrow_down("LPCurrent");}function D43564344() {
+pop_menu("details_fptype1_actiontype",actopts);}function D43564488() {
+pop_menu("details_fptype2_actiontype",actopts);}function D43564200() {
+pop_menu("details_fptype3_actiontype",actopts);}function D43564416() {
+pop_menu("details_fptype4_actiontype",actopts);}function D43564560() {
+pop_menu("details_frecovery_1",restopts);}function D43564632() {
+pop_menu("details_frecovery_2",restopts);}function D43564704() {
+pop_menu("details_frecovery_4",restopts);}function D43563912() {
+pop_menu("details_frecovery_3",restopts);}function D43564776() {
+pop_menu("details_attack2_damagetype",dmgopts);}function D43564848() {
+pop_menu("details_attack3_damagetype",dmgopts);}function D43564992() {
+pop_menu("details_attack5_damagetype",dmgopts);}function D43565064() {
+pop_menu("details_attack4_damagetype",dmgopts);;}
+function U12087872() {event.target.buttonImportIcon();}
+function U12088016() {event.target.buttonImportIcon();}
+
+
+pdfixUpdatePage(document.getElementById('pdf-page-1'));
+pdfixUpdatePage(document.getElementById('pdf-page-2'));
+pdfixUpdatePage(document.getElementById('pdf-page-3'));
+pdfixUpdatePage(document.getElementById('pdf-page-4'));
