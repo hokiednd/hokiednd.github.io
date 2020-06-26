@@ -20,11 +20,12 @@
 
 <body id="stat-block-body" style="min-width: 1000px;">
     <div class="container" style="text-align: center;">
-        
+
         <div class="content">
             <br>
-            <h1>D&amp;D 5e Statblock Generator</h1>
-            <p>Based on <a href="http://valloric.github.io/statblock5e/">Statblock5e</a> and <a href="https://open5e.com/">Open5e</a></p>
+            <h1>Monster Builder</h1>
+            <p>Modified from <a href="http://tetra-cube.com/dnd/dnd-statblock.html">D&amp;D 5e Statblock Generator</a></p>
+            <p>Read the original article from <a href="https://theangrygm.com/f-cr-theres-a-better-way-part-1/">The Angry GM</a></p>
             <br>
             <button onclick="TrySaveFile()">Save Statblock</button>
             <button onclick="LoadFilePrompt()">Load Statblock</button>
@@ -179,7 +180,15 @@
                 <hr>
                 <table id="armor-hitdice-form">
                     <tr>
-                        <td></td>
+                        <td>
+                          <div id="cr-form">
+                              <label for="cr-input">Challenge Rating:
+                                  <select id="cr-input" onchange="InputFunctions.InputCR()"></select>
+                              </label>
+                              <br>
+                              <div id="prof-bonus"></div>
+                          </div>
+                        </td>
                         <td>
                             <div id="hitdice-input-prompt"><label for="hitdice-input">Hit Dice: <br><input type="number" id="hitdice-input" min="1" max="99" value="5"></label></div>
                             <div id="hp-text-input-prompt"><label for="hp-text-input">Hit Points:<br><input id="hp-text-input" value="4 (1d8)"></label></div>
@@ -216,7 +225,7 @@
                         </td>
                     </tr>
                 </table>
-                <br>
+                <hr>
                 <table id="monster-speed-form">
                     <tr>
                         <td class="normal-speed-col"><label for="speed-input">Speed:<br><input type="number" id="speed-input" min="0" max="995" step="5" value="30"> ft.</label></td>
@@ -404,14 +413,6 @@
                         <td><label for="truesight-input">Truesight: <input type="number" id="truesight-input" min="0" max="995" step="5" value="0"> ft.</label></td>
                     </tr>
                 </table>
-                <br>
-                <div id="cr-form">
-                    <label for="cr-input">Challenge Rating:
-                        <select id="cr-input" onchange="InputFunctions.InputCR()"></select>
-                    </label>
-                    <br>
-                    <div id="prof-bonus"></div>
-                </div>
                 <hr>
                 <div>
                     <label for="is-legendary-input"><b>Legendary Creature:</b> <input type="checkbox" id="is-legendary-input" onclick="FormFunctions.ShowHideLegendaryCreature()"></label>
@@ -468,7 +469,6 @@
                 </div>
                 <br>
             </div>
-            <div class="footer"><a href="https://github.com/Tetra-cube/Tetra-cube.github.io">GitHub Repo</a></div>
         </div>
     </div>
 </body>

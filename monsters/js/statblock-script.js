@@ -34,6 +34,7 @@ var mon = {
     truesight: 0,
     telepathy: 0,
     cr: 1,
+    tier: 1,
     isLegendary: false,
     legendariesDescription: "",
     properties: [],
@@ -463,7 +464,7 @@ var FormFunctions = {
         this.MakeDisplayList("reactions", false, true);
         this.MakeDisplayList("legendaries", false, true);
 
-        // Is Legendary?	
+        // Is Legendary?
         $("#is-legendary-input").prop("checked", mon.isLegendary);
         this.ShowHideLegendaryCreature();
 
@@ -638,7 +639,7 @@ var FormFunctions = {
             "<option value=1/4>1/4 (", data.crs["1/4"].xp, " XP)</option>",
             "<option value=1/2>1/2 (", data.crs["1/2"].xp, " XP)</option>"
         ];
-        for (let cr = 1; cr < 100; cr++)
+        for (let cr = 1; cr < 8; cr++)
             dropdownBuffer.push("<option value=", cr, ">", cr, " (", data.crs[cr].xp, " XP)</option>");
         $("#cr-input").html(dropdownBuffer.join(""));
     }
@@ -784,7 +785,7 @@ var GetVariablesFunctions = {
         mon.speedDesc = $("#custom-speed-prompt").val();
         mon.customSpeed = $("#custom-speed-input").prop("checked");
 
-        // Stats	
+        // Stats
         mon.strPoints = $("#str-input").val();
         mon.dexPoints = $("#dex-input").val();
         mon.conPoints = $("#con-input").val();
@@ -1140,7 +1141,7 @@ var GetVariablesFunctions = {
 		if(Array.isArray(abilityDesc))
 			abilityDesc = abilityDesc.join("\n");
         abilityDesc = abilityDesc.trim();
-		
+
         // In case of spellcasting
         if (arrName == "abilities" && abilityName.toLowerCase().includes("spellcasting") && abilityDesc.includes("\n")) {
             abilityDesc = abilityDesc.split("\u2022").join(""), // Remove bullet points
