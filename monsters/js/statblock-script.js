@@ -6,20 +6,19 @@ var mon = {
     type: "humanoid",
     tag: "",
     alignment: "any alignment",
-    hitDice: 5,
-    armorName: "none",
-    shieldBonus: 0,
-    natArmorBonus: 3,
-    otherArmorDesc: "10 (armor)",
+    armorName: "average",
+    hpName: "average",
+    dprName: "average",
+    atkName: "average",
+    stName: "average",
+    otherArmorDesc: "no armor",
     speed: 30,
     burrowSpeed: 0,
     climbSpeed: 0,
     flySpeed: 0,
     hover: false,
     swimSpeed: 0,
-    customHP: false,
     customSpeed: false,
-    hpText: "4 (1d8)",
     speedDesc: "30 ft.",
     strPoints: 10,
     dexPoints: 10,
@@ -33,8 +32,7 @@ var mon = {
     tremorsense: 0,
     truesight: 0,
     telepathy: 0,
-    cr: 1,
-    tier: 1,
+    tier: "apprentice",
     isLegendary: false,
     legendariesDescription: "",
     properties: [],
@@ -49,7 +47,15 @@ var mon = {
     conditions: [],
     languages: [],
     doubleColumns: false,
-    separationPoint: 1
+    separationPoint: 1,
+    mtrig: "bloodied",
+    mthresh: .5,
+    mtype: "retreat",
+    mdc: 12,
+    avgHP: 0,
+    org: "group",
+    threatadj: 0,
+    avgDMG: 0
 };
 
 // Save function
@@ -152,8 +158,14 @@ function UpdateStatblock(moveSeparationPoint) {
     // Hit Points
     $("#hit-points").html(StringFunctions.GetHP());
 
+    // Morale
+    $("#morale").html(StringFunctions.GetMorale());
+
     // Speed
     $("#speed").html(StringFunctions.GetSpeed());
+
+    // Threat
+    $("#threat-level").html(StringFunctions.GetThreat());
 
     // Stats
     let setPts = (id, pts) =>
@@ -174,8 +186,8 @@ function UpdateStatblock(moveSeparationPoint) {
         propertiesDisplayList.push(StringFunctions.MakePropertyHTML(propertiesDisplayArr[index]));
     $("#properties-list").html(propertiesDisplayList.join(""));
 
-    // Challenge Rating
-    $("#challenge-rating").html(mon.cr + " (" + data.crs[mon.cr].xp + " XP)");
+    // Tier and Organization
+    $("#tier-org").html(StringFunctions.StringCapitalize(mon.tier) + " tier, " + mon.org + " organization");
 
     // Abilities
     let traitsHTML = [];
@@ -257,11 +269,11 @@ function ReplaceTraitTags(desc) {
                     type = "stat";
                     if (readString.length > 3) {
                         if (readString.substring(3, 7) == " atk") {
-                            bonus += data.crs[mon.cr].prof;
+                            bonus += data.tiers[mon.tier].prof;
                             readPosition = 7;
                             type = "atk";
                         } else if (readString.substring(3, 8) == " save") {
-                            bonus += data.crs[mon.cr].prof + 8;
+                            bonus += data.tiers[mon.tier].prof + 8;
                             readPosition = 8;
                             type = "save";
                         }
@@ -356,7 +368,7 @@ function TryMarkdown() {
             (Array.isArray(propertiesDisplayArr[index].arr) ? propertiesDisplayArr[index].arr.join(", ") : propertiesDisplayArr[index].arr),
             "<br>");
     }
-    markdown.push("> - **Challenge** ", mon.cr, " (", data.crs[mon.cr].xp, " XP)<br>>___");
+  //  markdown.push("> - **Challenge** ", mon.cr, " (", data.crs[mon.cr].xp, " XP)<br>>___");
 
     if (mon.abilities.length > 0) markdown.push("<br>", GetTraitMarkdown(mon.abilities, false));
     if (mon.actions.length > 0) markdown.push("<br>> ### Actions<br>", GetTraitMarkdown(mon.actions, false));
@@ -408,17 +420,15 @@ var FormFunctions = {
         $("#alignment-input").val(mon.alignment);
 
         // Armor Class
-        $("#armor-input").val(mon.armorName);
-        $("#shield-input").prop("checked", (mon.shieldBonus > 0 ? true : false));
-        $("#natarmor-input").val(mon.natArmorBonus);
         $("#otherarmor-input").val(mon.otherArmorDesc);
-        this.ShowHideOtherArmor();
+        $("#armor-input").val(mon.armorName);
 
         // Hit Dice
-        $("#hitdice-input").val(mon.hitDice);
-        $("#hp-text-input").val(StringFunctions.GetHP());
-        $("#custom-hp-input").prop("checked", mon.customHP);
-        this.ShowHideCustomHP();
+        $("#hp-input").val(mon.hpName);
+
+        //morale
+        $("#morale-input").prop("checked");
+        this.ShowHideMorale();
 
         // Speeds
         $("#speed-input").val(mon.speed);
@@ -468,9 +478,21 @@ var FormFunctions = {
         $("#is-legendary-input").prop("checked", mon.isLegendary);
         this.ShowHideLegendaryCreature();
 
-        // Challenge Rating
-        $("#cr-input").val(mon.cr);
-        this.ChangeCRForm();
+        // Tier
+        $("#tier-input").val(mon.tier);
+        this.ChangeTierForm();
+
+        // Attack Bonus
+        $("#attack-input").val(mon.atkName);
+        this.ChangeAtkBForm();
+
+        // Save DC
+        $("#savedc-input").val(mon.stName);
+        this.ChangeSDCForm();
+
+        // DPR
+        $("#dpr-input").val(mon.dprName);
+        this.ChangeDPRForm();
 
         // Column Radio Buttons
         this.ChangeColumnRadioButtons();
@@ -485,19 +507,10 @@ var FormFunctions = {
         this.ShowHideHtmlElement("#other-type-input", $("#type-input").val() == "*");
     },
 
-    ShowHideCustomHP: function() {
-        $("#hitdice-input-prompt, #hp-text-input-prompt").hide();
-        if ($("#custom-hp-input").prop('checked'))
-            $("#hp-text-input-prompt").show();
-        else
-            $("#hitdice-input-prompt").show();
-    },
-    ShowHideOtherArmor: function() {
-        $("#natarmor-prompt, #otherarmor-prompt").hide();
-        if ($("#armor-input").val() == "natural armor")
-            $("#natarmor-prompt").show();
-        else if ($("#armor-input").val() == "other")
-            $("#otherarmor-prompt").show();
+    ShowHideMorale: function() {
+        $("#mdc-form, #mreact-form, #mtrig-form, #mthresh-input-prompt, #m-block").hide();
+        if ($("#morale-input").prop('checked'))
+            $("#mdc-form, #mreact-form, #mtrig-form, #mthresh-input-prompt, #m-block").show();
     },
     ShowHideCustomSpeed: function() {
         $(".normal-speed-col, .custom-speed-col").hide();
@@ -543,9 +556,24 @@ var FormFunctions = {
         $("#" + stat + "bonus").html(StringFunctions.BonusFormat(MathFunctions.PointsToBonus($("#" + stat + "-input").val())));
     },
 
-    // Set the proficiency bonus based on the monster's CR
-    ChangeCRForm: function() {
-        $("#prof-bonus").html("(Proficiency Bonus: +" + data.crs[mon.cr].prof + ")");
+    // Set the proficiency bonus based on the monster's Tier
+    ChangeTierForm: function() {
+        $("#prof-bonus").html("Proficiency Bonus: +" + data.tiers[mon.tier].prof);
+    },
+
+    // Set the attack bonus based on the monster's Tier
+    ChangeAtkBForm: function() {
+        $("#atk-bonus").html("Attack Bonus: +" + StringFunctions.GetAttackBonus());
+    },
+
+    // Set the save dc based on the monster's Tier
+    ChangeSDCForm: function() {
+        $("#save-dc").html("Ability Save DC: " + StringFunctions.GetSaveDC());
+    },
+
+    // Set the averageDPR based on the monster's Tier and organization
+    ChangeDPRForm: function() {
+        $("#avg-dpr").html("Average DPR: " + StringFunctions.GetDPR());
     },
 
     // For setting the column radio buttons based on saved data
@@ -630,19 +658,6 @@ var FormFunctions = {
         arr[index] = temp;
         this.MakeDisplayList(arrName, false, true);
     },
-
-    // Initialize Forms
-    InitForms: function() {
-        let dropdownBuffer = [
-            "<option value=0>0 (", data.crs["0"].xp, " XP)</option>",
-            "<option value=1/8>1/8 (", data.crs["1/8"].xp, " XP)</option>",
-            "<option value=1/4>1/4 (", data.crs["1/4"].xp, " XP)</option>",
-            "<option value=1/2>1/2 (", data.crs["1/2"].xp, " XP)</option>"
-        ];
-        for (let cr = 1; cr < 8; cr++)
-            dropdownBuffer.push("<option value=", cr, ">", cr, " (", data.crs[cr].xp, " XP)</option>");
-        $("#cr-input").html(dropdownBuffer.join(""));
-    }
 }
 
 // Input functions to be called only through HTML
@@ -711,10 +726,113 @@ var InputFunctions = {
         FormFunctions.MakeDisplayList("languages", false);
     },
 
-    // Change CR based on input dropdown
-    InputCR: function() {
-        mon.cr = $("#cr-input").val();
-        FormFunctions.ChangeCRForm();
+    // Change Tier based on input dropdown
+    InputTier: function() {
+        mon.tier = $("#tier-input").val();
+        FormFunctions.ChangeTierForm();
+        FormFunctions.ChangeAtkBForm();
+        FormFunctions.ChangeSDCForm();
+        FormFunctions.ChangeDPRForm();
+    },
+
+    // Change Org based on input dropdown
+    InputOrg: function() {
+        mon.org = $("#org-input").val();
+        FormFunctions.ChangeDPRForm();
+    },
+
+    InputAtk: function() {
+        mon.atkName = $("#attack-input").val();
+        FormFunctions.ChangeAtkBForm();
+    },
+
+    InputSDC: function() {
+        mon.stName = $("#savedc-input").val();
+        FormFunctions.ChangeSDCForm();
+    },
+
+    InputDPR: function() {
+        mon.dprName = $("#dpr-input").val();
+        FormFunctions.ChangeDPRForm();
+    },
+
+    InputArchetype: function(arch_sel) {
+      if (arch_sel === "paragon") {
+        mon.atkName = "good";
+        mon.dprName = "good";
+        mon.armorName = "good";
+        mon.hpName = "good";
+      }
+      if (arch_sel === "tank") {
+        mon.atkName = "poor";
+        mon.dprName = "poor";
+        mon.armorName = "good";
+        mon.hpName = "good";
+      }
+      if (arch_sel === "bulwark") {
+        mon.atkName = "good";
+        mon.dprName = "poor";
+        mon.armorName = "good";
+        mon.hpName = "poor";
+      }
+      if (arch_sel === "enforcer") {
+        mon.atkName = "good";
+        mon.dprName = "good";
+        mon.armorName = "average";
+        mon.hpName = "average";
+      }
+      if (arch_sel === "striker") {
+        mon.atkName = "good";
+        mon.dprName = "poor";
+        mon.armorName = "average";
+        mon.hpName = "average";
+      }
+      if (arch_sel === "baseline") {
+        mon.atkName = "average";
+        mon.dprName = "average";
+        mon.armorName = "average";
+        mon.hpName = "average";
+      }
+      if (arch_sel === "ward") {
+        mon.atkName = "average";
+        mon.dprName = "average";
+        mon.armorName = "good";
+        mon.hpName = "poor";
+      }
+      if (arch_sel === "meat") {
+        mon.atkName = "average";
+        mon.dprName = "average";
+        mon.armorName = "poor";
+        mon.hpName = "good";
+      }
+      if (arch_sel === "brute") {
+        mon.atkName = "poor";
+        mon.dprName = "good";
+        mon.armorName = "poor";
+        mon.hpName = "good";
+      }
+      if (arch_sel === "sniper") {
+        mon.atkName = "good";
+        mon.dprName = "good";
+        mon.armorName = "poor";
+        mon.hpName = "poor";
+      }
+      if (arch_sel === "fodder") {
+        mon.atkName = "poor";
+        mon.dprName = "poor";
+        mon.armorName = "poor";
+        mon.hpName = "poor";
+      }
+
+        mon.stName = mon.atkName;
+        FormFunctions.ChangeAtkBForm();
+        FormFunctions.ChangeSDCForm();
+        FormFunctions.ChangeDPRForm();
+        $("#armor-input").val(mon.armorName);
+        $("#hp-input").val(mon.hpName);
+        $("#attack-input").val(mon.atkName);
+        $("#savedc-input").val(mon.stName);
+        $("#dpr-input").val(mon.dprName);
     },
 
     AddAbilityInput: function(arrName) {
@@ -766,14 +884,19 @@ var GetVariablesFunctions = {
 
         // Armor Class
         mon.armorName = $("#armor-input").val();
-        mon.shieldBonus = $("#shield-input").prop("checked") ? 2 : 0;
-        mon.natArmorBonus = parseInt($("#natarmor-input").val());
         mon.otherArmorDesc = $("#otherarmor-input").val();
 
+        // Save DC
+        mon.stName = $("#savedc-input").val();
+
+        // Attack Bonus
+        mon.atkName = $("#attack-input").val();
+
         // Hit Points
-        mon.hitDice = $("#hitdice-input").val();
-        mon.hpText = $("#hp-text-input").val();
-        mon.customHP = $("#custom-hp-input").prop("checked");
+        mon.hpName = $("#hp-input").val();
+
+        // Damage
+        mon.dprName = $("#dpr-input").val();
 
         // Speeds
         mon.speed = $("#speed-input").val();
@@ -803,8 +926,20 @@ var GetVariablesFunctions = {
         // Telepathy
         mon.telepathy = parseInt($("#telepathy-input").val());
 
-        // Challenge Rating
-        mon.cr = $("#cr-input").val();
+        // Tier
+        mon.tier = $("#tier-input").val();
+
+        // Organization
+        mon.org = $("#org-input").val();
+
+        // Morale
+        mon.mdc = $("#mdc-input").val();
+        mon.mtype = $("#mreact-input").val();
+        mon.mtrig = $("#mtrig-input").val();
+        mon.mthresh = $("#mthresh-input").val() * 1;
+
+        // Threat
+        mon.threatadj = $("#threat-mod").val() * 1;
 
         // Legendaries
         mon.isLegendary = $("#is-legendary-input").prop("checked");
@@ -832,75 +967,27 @@ var GetVariablesFunctions = {
         mon.wisPoints = preset.wisdom;
         mon.chaPoints = preset.charisma;
 
-        // CR
-        mon.cr = preset.challenge_rating;
+        // Tier
+        mon.tier = "apprentice";
+
+        // Organization
+        mon.org = "group";
 
         // Armor Class
-        let armorAcData = preset.armor_class,
-            armorDescData = preset.armor_desc ? preset.armor_desc.split(",") : null;
+        mon.armorName = "average";
+        mon.otherArmorDesc = preset.armor_desc;
 
-        // What type of armor do we have? If it doesn't match anything, use "other"
-        mon.shieldBonus = 0;
-        if (armorDescData) {
-            mon.armorName = armorDescData[0];
-            // If we have a shield and nothing else
-            if (armorDescData.length == 1 && armorDescData[0].trim() == "shield") {
-                mon.shieldBonus = 2;
-                mon.armorName = "none";
-            } else {
-                // If we have a shield in addition to something else
-                if (armorDescData.length > 1) {
-                    if (armorDescData[1].trim() == "shield") {
-                        mon.shieldBonus = 2;
-                        mon.armorName = armorDescData[0];
-                    }
-                    // Or if it's just weird
-                    else
-                        armorDescData = [armorDescData.join(",")];
-                }
+        // Save DC
+        mon.stName = "average";
 
-                // Is it natural armor?
-                if (mon.armorName == "natural armor") {
-                    let natArmorBonusCheck = armorAcData - MathFunctions.GetAC("none");
-                    if (natArmorBonusCheck > 0)
-                        mon.natArmorBonus = natArmorBonusCheck;
-
-                    // Weird edge case where the monster has a natural armor bonus of <= 0
-                    else
-                        mon.armorName = "other";
-                }
-
-                // Is it another type of armor we know?
-                else if (data.armors.hasOwnProperty(armorDescData[0].trim()))
-                    mon.armorName = armorDescData[0].trim();
-
-                // We have no idea what this armor is
-                else
-                    mon.armorName = "other";
-            }
-        } else
-            mon.armorName = (armorAcData == MathFunctions.GetAC("none") ? "none" : "other");
-
-        // In case it's an unknown armor type
-        if (mon.armorName == "other") {
-            if (armorDescData)
-                mon.otherArmorDesc = armorDescData[0].includes("(") ? armorDescData :
-                armorAcData + " (" + armorDescData + ")";
-            else
-                mon.otherArmorDesc = armorAcData + " (unknown armor type)";
-
-            // Set the nat armor bonus for convenience- often the AC is for natural armor, but doesn't have it in the armor description
-            let natArmorBonusCheck = armorAcData - MathFunctions.GetAC("none");
-
-            if (natArmorBonusCheck > 0)
-                mon.natArmorBonus = natArmorBonusCheck;
-        } else
-            mon.otherArmorDesc = armorAcData + (preset.armor_desc ? " (" + preset.armor_desc + ")" : "");
+        // Attack Bonus
+        mon.atkName = "average";
 
         // Hit Dice
-        mon.hitDice = parseInt(preset.hit_dice.split("d")[0]);
-        mon.hpText = mon.hitDice.toString();
-        mon.customHP = false;
+        mon.hpName = "average";
+
+        // Damage
+        mon.dprName = "average";
 
         // Speeds
         let GetSpeed = (speedList, speedType) => speedList.hasOwnProperty(speedType) ? parseInt(speedList[speedType]) : 0;
@@ -942,7 +1029,7 @@ var GetVariablesFunctions = {
                 let currentSkill = data.allSkills[index],
                     skillCheck = StringFunctions.StringReplaceAll(currentSkill.name.toLowerCase(), " ", "_");
                 if (preset.skills[skillCheck]) {
-                    let expectedExpertise = MathFunctions.PointsToBonus(mon[currentSkill.stat + "Points"]) + Math.ceil(data.crs[mon.cr].prof * 1.5),
+                    let expectedExpertise = MathFunctions.PointsToBonus(mon[currentSkill.stat + "Points"]) + Math.ceil(data.tiers[mon.tier].prof * 1.5),
                         skillVal = preset.skills[skillCheck];
                     this.AddSkill(data.allSkills[index].name, (skillVal >= expectedExpertise ? " (ex)" : null));
                 }
@@ -1223,36 +1310,89 @@ var StringFunctions = {
 
     // Get the string displayed for the monster's AC
     GetArmorData: function() {
-        if (mon.armorName == "other")
-            return mon.otherArmorDesc;
-        if (mon.armorName == "mage armor") {
-            let mageAC = MathFunctions.GetAC(mon.armorName);
-            return mageAC + " (" + (mon.shieldBonus > 0 ? "shield, " : "") + (mageAC + 3) + " with _mage armor_)";
-        }
-        if (mon.armorName == "none")
-            return MathFunctions.GetAC(mon.armorName) + (mon.shieldBonus > 0 ? " (shield)" : "");
-        return this.GetArmorString(mon.armorName, MathFunctions.GetAC(mon.armorName));
+      let armor_mod = 0;
+      if (mon.armorName === "poor") armor_mod = -1;
+      if (mon.armorName === "good") armor_mod = 1;
+
+      let armor_note = "";
+      if (mon.otherArmorDesc) armor_note = " (" + mon.otherArmorDesc + ")";
+            return data.armorclass[(data.tiers[mon.tier].trow+armor_mod)] + armor_note;
     },
 
-    // Add a shield to the string if the monster has one
-    GetArmorString: function(name, ac) {
-        if (mon.shieldBonus > 0)
-            return ac + " (" + name + ", shield)";
-        return ac + " (" + name + ")"
+    // Get the string displayed for the monster's Save DC
+    GetSaveDC: function() {
+      let st_mod = 0;
+      if (mon.stName === "poor") st_mod = -1;
+      if (mon.stName === "good") st_mod = 1;
+
+      return data.savedc[(data.tiers[mon.tier].trow+st_mod)];
+    },
+
+    // Get the string displayed for the monster's Attack Bonus
+    GetAttackBonus: function() {
+      let atk_mod = 0;
+      if (mon.atkName === "poor") atk_mod = -1;
+      if (mon.atkName === "good") atk_mod = 1;
+
+      return data.atkbonus[(data.tiers[mon.tier].trow+atk_mod)];
     },
 
     // Get the string displayed for the monster's HP
     GetHP: function() {
-        if (mon.customHP)
-            return mon.hpText;
+        let hp_mod = 0;
+        if (mon.hpName === "poor") hp_mod = -1;
+        if (mon.hpName === "good") hp_mod = 1;
+
         let conBonus = MathFunctions.PointsToBonus(mon.conPoints);
-        hitDieSize = data.sizes[mon.size].hitDie,
-            avgHP = Math.floor(mon.hitDice * ((hitDieSize + 1) / 2)) + (mon.hitDice * conBonus);
-        if (conBonus > 0)
-            return avgHP + " (" + mon.hitDice + "d" + hitDieSize + " + " + (mon.hitDice * conBonus) + ")";
+        let hitDieSize = data.sizes[mon.size].hitDie;
+
+        mon.avgHP = data.hitpoints[(data.tiers[mon.tier].trow+hp_mod)][data.organizations[mon.org].ocol];
+
+        mon.hitDice = Math.round(mon.avgHP / (((hitDieSize + 1) / 2) + conBonus));
+        let avgMod = mon.avgHP - Math.floor(mon.hitDice * ((hitDieSize + 1) / 2));
+
+        if (avgMod > 0)
+            return mon.avgHP + " (" + mon.hitDice + "d" + hitDieSize + " + " + avgMod + ")";
         if (conBonus == 0)
-            return avgHP + " (" + mon.hitDice + "d" + hitDieSize + ")";
-        return Math.max(avgHP, 1) + " (" + mon.hitDice + "d" + hitDieSize + " - " + -(mon.hitDice * conBonus) + ")";
+            return mon.avgHP + " (" + mon.hitDice + "d" + hitDieSize + ")";
+        return mon.avgHP + " (" + mon.hitDice + "d" + hitDieSize + " - " + -(avgMod) + ")";
+    },
+
+    // Get the average damage per round
+    GetDPR: function() {
+        let dpr_mod = 0;
+        if (mon.dprName === "poor") dpr_mod = -1;
+        if (mon.dprName === "good") dpr_mod = 1;
+
+        mon.avgDMG = data.dpr[(data.tiers[mon.tier].trow+dpr_mod)][data.organizations[mon.org].ocol];
+
+        return mon.avgDMG;
+    },
+
+    GetMorale: function() {
+      let morale_hp = .25 + (mon.mthresh / 2);
+      if (mon.mtrig === "wounded") morale_hp = 1 - mon.mthresh;
+      if (mon.mtrig === "about to die") morale_hp = mon.mthresh;
+      return "DC " + mon.mdc + " or " + mon.mtype + " when " + mon.mtrig + " (" + Math.floor(morale_hp * mon.avgHP) + ")";
+    },
+
+    GetThreat: function() {
+      let threat = mon.threatadj;
+      if (mon.hpName === "poor") threat = threat - 1;
+      if (mon.hpName === "good") threat = threat + 1;
+      if (mon.armorName === "poor") threat = threat - 1;
+      if (mon.armorName === "good") threat = threat + 1;
+      if (mon.dprName === "poor") threat = threat - 1;
+      if (mon.dprName === "good") threat = threat + 1;
+
+      if (mon.atkName === "good" || mon.stName === "good") threat = threat + 1;
+      if (mon.atkName === "poor" && mon.stName === "poor") threat = threat - 1;
+
+      if (threat > 3) return "extreme (" + threat + ")";
+      if (threat > 1) return "high (" + threat + ")";
+      if (threat > -2) return "medium (" + threat + ")";
+      if (threat > -4) return "low (" + threat + ")";
+      return "negligible (" + threat + ")";
     },
 
     GetSpeed: function() {
@@ -1277,7 +1417,7 @@ var StringFunctions = {
         let ppData = ArrayFunctions.FindInList(mon.skills, "Perception"),
             pp = 10 + MathFunctions.PointsToBonus(mon.wisPoints);
         if (ppData != null)
-            pp += data.crs[mon.cr].prof * (ppData.hasOwnProperty("note") ? 2 : 1);
+            pp += data.tiers[mon.tier].prof * (ppData.hasOwnProperty("note") ? 2 : 1);
         sensesDisplayArr.push("passive Perception " + pp);
         return sensesDisplayArr.join(", ");
     },
@@ -1297,13 +1437,13 @@ var StringFunctions = {
         // Saving Throws
         for (let index = 0; index < mon.sthrows.length; index++)
             sthrowsDisplayArr.push(StringFunctions.StringCapitalize(mon.sthrows[index].name) + " " +
-                StringFunctions.BonusFormat((MathFunctions.PointsToBonus(mon[mon.sthrows[index].name + "Points"]) + data.crs[mon.cr].prof)));
+                StringFunctions.BonusFormat((MathFunctions.PointsToBonus(mon[mon.sthrows[index].name + "Points"]) + data.tiers[mon.tier].prof)));
 
         // Skills
         for (let index = 0; index < mon.skills.length; index++) {
             let skillData = mon.skills[index];
             skillsDisplayArr.push(StringFunctions.StringCapitalize(skillData.name) + " " +
-                StringFunctions.BonusFormat(MathFunctions.PointsToBonus(mon[skillData.stat + "Points"]) + data.crs[mon.cr].prof * (skillData.hasOwnProperty("note") ? 2 : 1)));
+                StringFunctions.BonusFormat(MathFunctions.PointsToBonus(mon[skillData.stat + "Points"]) + data.tiers[mon.tier].prof * (skillData.hasOwnProperty("note") ? 2 : 1)));
         }
 
         // Damage Types (It's not pretty but it does its job)
@@ -1442,20 +1582,6 @@ var MathFunctions = {
 
     // Compute ability bonuses based on ability scores
     PointsToBonus: (points) => Math.floor(points / 2) - 5,
-
-    // Compute armor class
-    GetAC: function(armorNameCheck) {
-        let armor = data.armors[armorNameCheck],
-            dexBonus = MathFunctions.PointsToBonus(mon.dexPoints);
-        if (armor) {
-            if (armor.type == "light") return armor.ac + dexBonus + mon.shieldBonus;
-            if (armor.type == "medium") return armor.ac + Math.min(dexBonus, 2) + mon.shieldBonus;
-            if (armor.type == "heavy") return armor.ac + mon.shieldBonus;
-            if (armorNameCheck == "natural armor") return 10 + dexBonus + mon.natArmorBonus + mon.shieldBonus;
-            if (armorNameCheck == "other") return "other";
-        }
-        return 10 + dexBonus + mon.shieldBonus;
-    },
 }
 
 // Array functions
@@ -1544,7 +1670,7 @@ function Populate() {
     FormFunctions.SetCommonAbilitiesDropdown();
 
     // Populate the stat block
-    FormFunctions.InitForms();
+    //FormFunctions.InitForms();
     FormFunctions.SetForms();
     UpdateStatblock();
 }

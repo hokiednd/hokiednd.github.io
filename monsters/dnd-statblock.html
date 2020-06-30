@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>D&amp;D 5e Statblock Generator</title>
+    <title>5e Angry Monster Generator</title>
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="css/statblock-style.css">
     <link rel="stylesheet" type="text/css" href="css/statblock-page-style.css">
@@ -23,9 +23,10 @@
 
         <div class="content">
             <br>
-            <h1>Monster Builder</h1>
+            <h1>An Angry Monster Builder</h1>
             <p>Modified from <a href="http://tetra-cube.com/dnd/dnd-statblock.html">D&amp;D 5e Statblock Generator</a></p>
             <p>Read the original article from <a href="https://theangrygm.com/f-cr-theres-a-better-way-part-1/">The Angry GM</a></p>
+            <p>Uses the creature archetypes from <a href="https://docs.google.com/spreadsheets/d/1NUE_st_Bm3ZdhVZ8N-uUT0WHOOsuak6m-DkyOCMkCV0/edit">AndruC</a></p>
             <br>
             <button onclick="TrySaveFile()">Save Statblock</button>
             <button onclick="LoadFilePrompt()">Load Statblock</button>
@@ -47,6 +48,7 @@
                     <div class="section-left">
                         <div class="creature-heading">
                             <h1 id="monster-name">Monster</h1>
+                            <h3 id="tier-org">Tier and Organization</h3>
                             <h2 id="monster-type">Size, type, alignment</h2>
                         </div> <!-- creature heading -->
                         <svg height="5" width="100%" class="tapered-rule">
@@ -60,6 +62,10 @@
                             <div class="property-line">
                                 <h4>Hit Points</h4>
                                 <p id="hit-points"></p>
+                            </div> <!-- property line -->
+                            <div id="m-block" class="property-line">
+                                <h4>Morale</h4>
+                                <p id="morale"></p>
                             </div> <!-- property line -->
                             <div class="property-line last">
                                 <h4>Speed</h4>
@@ -99,8 +105,8 @@
                             </svg>
                             <div id="properties-list"></div>
                             <div class="property-line last">
-                                <h4>Challenge</h4>
-                                <p id="challenge-rating"></p>
+                                <h4>Threat</h4>
+                                <p id="threat-level"></p>
                             </div> <!-- property line -->
                         </div> <!-- top stats -->
                         <svg height="5" width="100%" class="tapered-rule">
@@ -177,51 +183,171 @@
                         </td>
                     </tr>
                 </table>
-                <hr>
-                <table id="armor-hitdice-form">
+                <br>
+                <table id="angry-form">
                     <tr>
                         <td>
                           <div id="cr-form">
-                              <label for="cr-input">Challenge Rating:
-                                  <select id="cr-input" onchange="InputFunctions.InputCR()"></select>
+                              <label for="tier-input">Tier: <br>
+                                  <select id="tier-input" onchange="InputFunctions.InputTier()">
+                                      <option value="apprentice">Apprentice (1-2)</option>
+                                      <option value="journeyman">Journeyman (3-5)</option>
+                                      <option value="adventurer">Adventurer (6-9)</option>
+                                      <option value="veteran">Veteran (7-11)</option>
+                                      <option value="champion">Champion (12-14)</option>
+                                      <option value="epic">Epic (15-17)</option>
+                                      <option value="legendary">Legendary (18-20)</option>
+                                  </select>
                               </label>
                               <br>
-                              <div id="prof-bonus"></div>
+                              <div class="box-note" id="prof-bonus"></div>
                           </div>
                         </td>
                         <td>
-                            <div id="hitdice-input-prompt"><label for="hitdice-input">Hit Dice: <br><input type="number" id="hitdice-input" min="1" max="99" value="5"></label></div>
-                            <div id="hp-text-input-prompt"><label for="hp-text-input">Hit Points:<br><input id="hp-text-input" value="4 (1d8)"></label></div>
-                            <div id="custom-hp-box-prompt" class="box-note"><label for="custom-hp-input">(Custom HP: <input id="custom-hp-input" type="checkbox" onchange="FormFunctions.ShowHideCustomHP()">)</label></div>
+                          <div id="org-form">
+                              <label for="org-input" onchange="InputFunctions.InputOrg()">Organization: <br>
+                                  <select id="org-input">
+                                      <option value="solo">Solo (4 positions)</option>
+                                      <option value="pair">Pair (2 positions)</option>
+                                      <option value="group" selected>Group (1 position)</option>
+                                      <option value="gang">Gang (&frac12; position)</option>
+                                      <option value="mob">Mob (&frac14; - &frac13; position)</option>
+                                  </select>
+                              </label>
+                          </div>
                         </td>
                         <td>
-                            <label for="armor-input">Armor Type: <br>
-                                <select id="armor-input" onchange="FormFunctions.ShowHideOtherArmor()">
-                                    <option value="none" selected>None</option>
-                                    <option value="natural armor">Natural Armor</option>
-                                    <option value="mage armor">Mage Armor</option>
-                                    <option value="padded armor">Padded</option>
-                                    <option value="leather armor">Leather</option>
-                                    <option value="studded leather">Studded Leather</option>
-                                    <option value="hide armor">Hide</option>
-                                    <option value="chain shirt">Chain Shirt</option>
-                                    <option value="scale mail">Scale Mail</option>
-                                    <option value="breastplate">Breastplate</option>
-                                    <option value="half plate">Half Plate</option>
-                                    <option value="ring mail">Ring Mail</option>
-                                    <option value="chain mail">Chain Mail</option>
-                                    <option value="splint">Splint</option>
-                                    <option value="plate">Plate</option>
-                                    <option value="other">Other</option>
-                                </select></label>
-                            <div id="shield-box-note" class="box-note"><label for="shield-input">(Shield: <input id="shield-input" type="checkbox">)</label></div>
+                          <div id="threat-mod-prompt"><label for="threat-mod">Threat Adjustment: <br>
+                            <input type="number" value="0" id="threat-mod"></label></div>
                         </td>
                         <td colspan="2">
-                            <div id="natarmor-prompt"><label for="natarmor-input">Natural Armor Bonus:<br><input type="number" id="natarmor-input" min="1" max="99" value="3"></label></div>
+                          <div id="arch-form">
+                              <label for="arch-input">Archetype: <br>
+                                  <select id="arch-input" onchange="InputFunctions.InputArchetype(this.value)">
+                                      <option value="baseline" selected>Baseline</option>
+                                      <option value="brute">Brute (good DPR & HP, poor AC & ATK)</option>
+                                      <option value="bulwark">Bulwark (good AC & ATK, poor DPR & HP)</option>
+                                      <option value="enforcer">Enforcer (good ATK & DPR)</option>
+                                      <option value="fodder">Fodder (poor AC, ATK, DPR & HP)</option>
+                                      <option value="meat">Meat (good HP, poor AC)</option>
+                                      <option value="paragon">Paragon (good AC, ATK, DPR & HP)</option>
+                                      <option value="sniper">Sniper (good ATK & DPR, poor AC & HP)</option>
+                                      <option value="striker">Striker (good AC, poor DPR)</option>
+                                      <option value="tank">Tank (good AC & HP, poor ATK & DPR)</option>
+                                      <option value="ward">Ward (good AC, poor HP)</option>
+                                  </select>
+                              </label>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                <hr>
+                <table id="armor-hitdice-form">
+                    <tr>
+                      <td>
+                          <label for="attack-input">Attack Bonus: <br>
+                              <select id="attack-input" onchange="InputFunctions.InputAtk()">
+                                  <option value="poor">Poor</option>
+                                  <option value="average" selected>Average</option>
+                                  <option value="good">Good</option>
+                              </select>
+                            </label>
+                            <br>
+                            <div class="box-note" id="atk-bonus"></div>
+                      </td>
+                      <td>
+                            <label for="savedc-input">Save DC: <br>
+                                <select id="savedc-input" onchange="InputFunctions.InputSDC()">
+                                    <option value="poor">Poor</option>
+                                    <option value="average" selected>Average</option>
+                                    <option value="good">Good</option>
+                                </select>
+                              </label>
+                              <br>
+                              <div class="box-note" id="save-dc"></div>
+                        </td>
+                        <td>
+                              <label for="dpr-input">Damage Output: <br>
+                                  <select id="dpr-input" onchange="InputFunctions.InputDPR()">
+                                      <option value="poor">Poor</option>
+                                      <option value="average" selected>Average</option>
+                                      <option value="good">Good</option>
+                                  </select>
+                                </label>
+                                <br>
+                                <div class="box-note" id="avg-dpr"></div>
+                          </td>
+                        <td>
+                            <label for="hp-input">HP Level: <br>
+                                <select id="hp-input">
+                                    <option value="poor">Poor</option>
+                                    <option value="average" selected>Average</option>
+                                    <option value="good">Good</option>
+                                </select>
+                              </label>
+                        </td>
+                        <td>
+                            <label for="armor-input">Armor Quality: <br>
+                                <select id="armor-input">
+                                    <option value="poor">Poor</option>
+                                    <option value="average" selected>Average</option>
+                                    <option value="good">Good</option>
+                                </select>
+                              </label>
+                        </td>
+                        <td>
                             <div id="otherarmor-prompt">
-                                <label for="otherarmor-input">Description: <input id="otherarmor-input" type="text" value="10 (armor)"></label><br>
+                                <label for="otherarmor-input">Description: <input id="otherarmor-input" type="text" value="(armor, shield)"></label><br>
                                 <div id="otherarmor-box-note" class="box-note"><i>Use _ to italicize</i></div>
                             </div>
+                        </td>
+                    </tr>
+                </table>
+                <br>
+                <table id="morale-form">
+                    <tr>
+                        <td>
+                          <div id="custom-morale-box-prompt" class="box-note"><label for="morale-input">Use Morale? <input id="morale-input" type="checkbox" onchange="FormFunctions.ShowHideMorale()"></label></div>
+                        </td>
+                        <td>
+                          <div id="mdc-form">
+                              <label for="mdc-input">Morale DC: <br>
+                                  <select id="mdc-input">
+                                      <option value="7">Cowardly (7)</option>
+                                      <option value="12" selected>Green (12)</option>
+                                      <option value="17">Hardened (17)</option>
+                                      <option value="22">Unshakeable (22)</option>
+                                  </select>
+                              </label>
+                          </div>
+                        </td>
+                        <td>
+                          <div id="mreact-form">
+                              <label for="mreact-input">Failure Type: <br>
+                                  <select id="mreact-input">
+                                      <option value="betray">Betray</option>
+                                      <option value="panic">Panic</option>
+                                      <option value="rage">Rage</option>
+                                      <option value="retreat" selected>Retreat</option>
+                                      <option value="rout">Rout</option>
+                                      <option value="surrender">Surrender</option>
+                                  </select>
+                              </label>
+                          </div>
+                        </td>
+                        <td>
+                          <div id="mtrig-form">
+                              <label for="mtrig-input">Trigger: <br>
+                                  <select id="mtrig-input">
+                                      <option value="wounded">Wounded</option>
+                                      <option value="bloodied" selected>Bloodied</option>
+                                      <option value="about to die">About to Die</option>
+                                  </select>
+                              </label>
+                          </div>
+                        </td>
+                        <td>
+                          <div id="mthresh-input-prompt"><label for="mthresh-input">HP Threshold %Mod: <br><input type="number" value=".5" id="mthresh-input"></label></div>
                         </td>
                     </tr>
                 </table>
@@ -469,6 +595,7 @@
                 </div>
                 <br>
             </div>
+            <div class="footer"><a href="https://github.com/angry-monsters/angry-monsters.github.io">GitHub Repo</a></div>
         </div>
     </div>
 </body>
