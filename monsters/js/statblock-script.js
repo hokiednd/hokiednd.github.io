@@ -8,6 +8,8 @@ var mon = {
     alignment: "any alignment",
     armorName: "average",
     hpName: "average",
+    hpCut: 1,
+    shieldBonus: 0,
     dprName: "average",
     atkName: "average",
     stName: "average",
@@ -76,9 +78,10 @@ var TryLoadFile = () => {
 // Print function
 function TryPrint() {
     let printWindow = window.open();
-    printWindow.document.write('<html><head><meta charset="utf-8"/><title>' + mon.name + '</title><link rel="shortcut icon" type="image/x-icon" href="./dndimages/favicon.ico" /><link rel="stylesheet" type="text/css" href="css/statblock-style.css"><link rel="stylesheet" type="text/css" href="css/libre-baskerville.css"><link rel="stylesheet" type="text/css" href="css/noto-sans.css"></head><body><div id="print-block" class="content">');
+    printWindow.document.write('<html><head><meta charset="utf-8"/><title>' + mon.name + '</title><link rel="stylesheet" type="text/css" href="css/statblock-style.css"><link rel="stylesheet" type="text/css" href="css/libre-baskerville.css"><link rel="stylesheet" type="text/css" href="css/noto-sans.css"></head><body><div id="print-block" class="content">');
     printWindow.document.write($("#stat-block-wrapper").html());
     printWindow.document.write('</div></body></html>');
+    printWindow.document.close();
 }
 
 // View as image function
@@ -350,10 +353,10 @@ function ReplaceTraitTags(desc) {
 // Homebrewery/GM Binder markdown
 function TryMarkdown() {
     let markdownWindow = window.open();
-    let markdown = ['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><title>', mon.name, '</title><link rel="shortcut icon" type="image/x-icon" href="./dndimages/favicon.ico" /></head><body><h2>Homebrewery/GM Binder Markdown</h2><code>', mon.doubleColumns ? "___<br>___<br>" : "___<br>", '> ## ', mon.name, '<br>>*', StringFunctions.StringCapitalize(mon.size), ' ', mon.type];
+    let markdown = ['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><title>', mon.name, '</title></head><body><h2>Homebrewery/GM Binder Markdown</h2><code>', mon.doubleColumns ? "___<br>___<br>" : "___<br>", '> ## ', mon.name, '<br>> #### *', (StringFunctions.StringCapitalize(mon.tier) + " tier, " + mon.org + " organization"), '* <br>> *', StringFunctions.StringCapitalize(mon.size), ' ', mon.type];
     if (mon.tag != "")
         markdown.push(' (', mon.tag, ')');
-    markdown.push(', ', mon.alignment, '*<br>>___<br>> - **Armor Class** ', StringFunctions.FormatString(StringFunctions.GetArmorData()), '<br>> - **Hit Points** ', StringFunctions.GetHP(), '<br>> - **Speed** ', StringFunctions.GetSpeed(), "<br>>___<br>>|STR|DEX|CON|INT|WIS|CHA|<br>>|:---:|:---:|:---:|:---:|:---:|:---:|<br>>|",
+    markdown.push(', ', mon.alignment, '*<br> > ## &lt;!-- --&gt; &lt;div style="margin-top:-25px"&gt;&amp;nbsp;&lt;/div&gt; <br> >___<br>> - **Armor Class** ', StringFunctions.FormatString(StringFunctions.GetArmorData()), '<br>> - **Hit Points** ', StringFunctions.GetHP(), StringFunctions.GetMdMorale(), '<br>> - **Speed** ', StringFunctions.GetSpeed(), "<br>>___<br>>|STR|DEX|CON|INT|WIS|CHA|<br>>|:---:|:---:|:---:|:---:|:---:|:---:|<br>>|",
         mon.strPoints, " (", StringFunctions.BonusFormat(MathFunctions.PointsToBonus(mon.strPoints)), ")|",
         mon.dexPoints, " (", StringFunctions.BonusFormat(MathFunctions.PointsToBonus(mon.dexPoints)), ")|",
         mon.conPoints, " (", StringFunctions.BonusFormat(MathFunctions.PointsToBonus(mon.conPoints)), ")|",
@@ -368,7 +371,7 @@ function TryMarkdown() {
             (Array.isArray(propertiesDisplayArr[index].arr) ? propertiesDisplayArr[index].arr.join(", ") : propertiesDisplayArr[index].arr),
             "<br>");
     }
-  //  markdown.push("> - **Challenge** ", mon.cr, " (", data.crs[mon.cr].xp, " XP)<br>>___");
+    markdown.push("> - **Threat** ", StringFunctions.GetThreat());
 
     if (mon.abilities.length > 0) markdown.push("<br>", GetTraitMarkdown(mon.abilities, false));
     if (mon.actions.length > 0) markdown.push("<br>> ### Actions<br>", GetTraitMarkdown(mon.actions, false));
@@ -381,6 +384,7 @@ function TryMarkdown() {
     markdown.push("</code></body></html>")
 
     markdownWindow.document.write(markdown.join(""));
+    markdownWindow.document.close();
 }
 
 function GetTraitMarkdown(traitArr, legendary) {
@@ -422,9 +426,11 @@ var FormFunctions = {
         // Armor Class
         $("#otherarmor-input").val(mon.otherArmorDesc);
         $("#armor-input").val(mon.armorName);
+        $("#shield-input").prop("checked", (mon.shieldBonus > 0 ? true : false));
 
         // Hit Dice
         $("#hp-input").val(mon.hpName);
+        $("#half-hp").prop("checked", (mon.hpCut < 1 ? true : false));
 
         //morale
         $("#morale-input").prop("checked");
@@ -885,6 +891,7 @@ var GetVariablesFunctions = {
         // Armor Class
         mon.armorName = $("#armor-input").val();
         mon.otherArmorDesc = $("#otherarmor-input").val();
+        mon.shieldBonus = $("#shield-input").prop("checked") ? 2 : 0;
 
         // Save DC
         mon.stName = $("#savedc-input").val();
@@ -894,6 +901,7 @@ var GetVariablesFunctions = {
 
         // Hit Points
         mon.hpName = $("#hp-input").val();
+        mon.hpCut = $("#half-hp").prop("checked") ? .5 : 1;
 
         // Damage
         mon.dprName = $("#dpr-input").val();
@@ -975,7 +983,24 @@ var GetVariablesFunctions = {
 
         // Armor Class
         mon.armorName = "average";
-        mon.otherArmorDesc = preset.armor_desc;
+        mon.shieldBonus = 0;
+        let armorDescData = preset.armor_desc ? preset.armor_desc.split(",") : null;
+        if (armorDescData) {
+            mon.otherArmorDesc = armorDescData[0];
+            // If we have a shield and nothing else
+            if (armorDescData.length == 1 && armorDescData[0].trim() == "shield") {
+                mon.shieldBonus = 2;
+                mon.otherArmorDesc = null;
+            } else {
+                // If we have a shield in addition to something else
+                if (armorDescData.length > 1) {
+                    if (armorDescData[1].trim() == "shield") {
+                        mon.shieldBonus = 2;
+                        mon.otherArmorDesc = armorDescData[0];
+                    }
+                }
+              }
+            }
 
         // Save DC
         mon.stName = "average";
@@ -1315,8 +1340,11 @@ var StringFunctions = {
       if (mon.armorName === "good") armor_mod = 1;
 
       let armor_note = "";
+      if (mon.shieldBonus > 0) armor_note = " (shield)";
       if (mon.otherArmorDesc) armor_note = " (" + mon.otherArmorDesc + ")";
-            return data.armorclass[(data.tiers[mon.tier].trow+armor_mod)] + armor_note;
+      if (mon.otherArmorDesc && (mon.shieldBonus > 0)) armor_note = " (" + mon.otherArmorDesc + ", shield)";
+
+      return data.armorclass[(data.tiers[mon.tier].trow+armor_mod)] + armor_note;
     },
 
     // Get the string displayed for the monster's Save DC
@@ -1346,7 +1374,7 @@ var StringFunctions = {
         let conBonus = MathFunctions.PointsToBonus(mon.conPoints);
         let hitDieSize = data.sizes[mon.size].hitDie;
 
-        mon.avgHP = data.hitpoints[(data.tiers[mon.tier].trow+hp_mod)][data.organizations[mon.org].ocol];
+        mon.avgHP = Math.floor(mon.hpCut * data.hitpoints[(data.tiers[mon.tier].trow+hp_mod)][data.organizations[mon.org].ocol]);
 
         mon.hitDice = Math.round(mon.avgHP / (((hitDieSize + 1) / 2) + conBonus));
         let avgMod = mon.avgHP - Math.floor(mon.hitDice * ((hitDieSize + 1) / 2));
@@ -1374,6 +1402,11 @@ var StringFunctions = {
       if (mon.mtrig === "wounded") morale_hp = 1 - mon.mthresh;
       if (mon.mtrig === "about to die") morale_hp = mon.mthresh;
       return "DC " + mon.mdc + " or " + mon.mtype + " when " + mon.mtrig + " (" + Math.floor(morale_hp * mon.avgHP) + ")";
+    },
+
+    GetMdMorale: function() {
+      if ($("#morale-input").prop('checked')) return '<br>> - **Morale** ' + StringFunctions.GetMorale();
+      return "";
     },
 
     GetThreat: function() {
