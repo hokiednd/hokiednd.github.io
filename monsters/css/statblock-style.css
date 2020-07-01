@@ -7,10 +7,11 @@
     width: 400px;
     background: #FDF1DC;
     background-size: cover;
-	background-position: center;
+	  background-position: center;
     background-image: url('../dndimages/statblockparch.jpg');
     padding: 10px 10px 20px;
     box-sizing: border-box;
+    color: #000000;
     font-family: 'Noto Sans', 'Myriad Pro', Calibri, Helvetica, Arial, sans-serif;
 }
 
@@ -55,17 +56,18 @@
     display: block;
     background: #E69A28;
     background-size: cover;
-	background-position: center;
+	  background-position: center;
     background-image: url('../dndimages/statblockbar.jpg');
     border: 1px solid #000;
     height: 5px;
     padding: 0 10px 0;
-    margin: -10px -10px 0;
+    margin: -10px -9px 0 -11px;
     box-sizing: initial;
+    width: 100%;
 }
 
 .orange-border.bottom {
-    margin: 15px -10px -20px;
+    margin: 15px -9px -20px -11px;
 }
 
 .tapered-rule {
